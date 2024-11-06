@@ -11,8 +11,3 @@ def my_f3(params):
 
 def my_f7(params):
     return f7([params])[0]
-
-
-print(quadratic([10.0 for _ in range(10)]))
-print(my_f3([10.0 for _ in range(10)]))
-print(my_f7([10.0 for _ in range(10)]))
