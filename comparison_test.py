@@ -39,14 +39,14 @@ def comparison_test(f, start_points, sig, t_max, repetitions, alpha, eps, logy=F
 
 
 DOMAIN = 100
-DIM = 30
-START_POINTS_NUM = 100
+DIM = 10
+START_POINTS_NUM = 10
 random_start_points = [
     [DOMAIN * (np.random.rand() * 2 - 1) for _ in range(DIM)]
     for __ in range(START_POINTS_NUM)
 ]
 
 
-print(comparison_test(quadratic, random_start_points[:100], 1e2, 500, 1, 1e-1, 1e-12))
-print(comparison_test(f3, random_start_points[:100], 1e0, 500, 1, 1e-8, 1e-12, True))
-print(comparison_test(f7, random_start_points[:100], 1e2, 500, 1, 1e-3, 1e-12, True))
+# print(comparison_test(quadratic, random_start_points[:100], 1e2, 500, 1, 1e-1, 1e-12))
+# print(comparison_test(f3, random_start_points[:100], 1e0, 500, 1, 1e-8, 1e-12, True))
+# print(comparison_test(f7, random_start_points[:100], 1e2, 500, 1, 1e-3, 1e-12, True))

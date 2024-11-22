@@ -5,6 +5,10 @@ import numpy as np
 
 matplotlib.use("Agg")
 
+@dataclass
+class params:
+    sig: float
+
 
 def solver(fun, x, sig, mut_freq, t_max, mul_up=1.22, mul_down=0.82):
     x = np.array(x)
@@ -29,9 +33,3 @@ def solver(fun, x, sig, mut_freq, t_max, mul_up=1.22, mul_down=0.82):
             success_num = 0
         t += 1
     return x, min_val, values
-
-
-DOMAIN = 2
-random_start_points = [DOMAIN * (np.random.rand() * 2 - 1) for _ in range(2)]
-start_point1 = [50.0 for _ in range(2)]
-start_point2 = [2 for _ in range(2)]
