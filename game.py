@@ -27,6 +27,9 @@ class Game:
         else:
             self._next_player = self._player1
 
+    def new_game(self) -> None:
+        self._next_player = self._player1
+        self._state = State()
 
     def get_player1(self) -> Player:
         return self._player1
