@@ -32,6 +32,3 @@ for x in range(1, MAX_X_DEPTH + 1):
         print("Game ended in a draw", draws, "times")
         print(player2.get_name(), "won", o_wins, "times")
         print("-" * 20)
-
-
-

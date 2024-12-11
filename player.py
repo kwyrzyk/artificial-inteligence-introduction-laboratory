@@ -8,12 +8,12 @@ class Player:
     def __init__(self, name: str, pred_depth: int) -> None:
         self._name = name
         self._pred_depth = pred_depth
-    
+
     def make_move(self, state: State) -> tuple[int, int]:
         successors = state.get_successors_with_moves()
         states_heuristics = {}
         for succ in list(successors.keys()):
-            heuristic = minimax(succ, self._pred_depth-1)
+            heuristic = minimax(succ, self._pred_depth - 1)
             states_heuristics[succ] = heuristic
         if state.get_next_move() == 1:
             best_heuristic = max(list(states_heuristics.values()))
@@ -22,7 +22,7 @@ class Player:
         best_states = []
         for succ in states_heuristics.keys():
             if states_heuristics[succ] == best_heuristic:
-                    best_states.append(succ)
+                best_states.append(succ)
         best_state = random.choice(best_states)
         best_move = successors[best_state]
         return best_move

@@ -8,5 +8,3 @@ player2 = Player("Player2", 2)
 display = Display()
 game = Game(player1, player2, display)
 game.start()
-
-# Usunąc gamestyl

@@ -4,7 +4,7 @@ from display import Display
 
 
 class Game:
-    def __init__(self, player1:Player, player2:Player, display:Display=None):
+    def __init__(self, player1: Player, player2: Player, display: Display = None):
         self._player1 = player1
         self._player2 = player2
         self._next_player = player1
@@ -60,6 +60,3 @@ class Game:
 
     def set_display(self, new_display: Display) -> None:
         self._display = new_display
-
-    
-    
