@@ -38,30 +38,9 @@ class MLP():
         self.activation_derivative = activation_fun.derivative
 
         self.weights = [np.random.randn(layer_sizes[i], layer_sizes[i+1]) for i in range(self.layers_num - 1)]
-        self.biases = [np.random.randn(1, layer_sizes[i+1]) for i in range(self.layers_num - 1)]
-
-    def _set_weights(self, flat_weights):
-        start = 0
-        for i in range(len(self.weights)):
-            weight_shape = self.weights[i].shape
-            bias_shape = self.biases[i].shape
-
-            weight_size = np.prod(weight_shape)
-            bias_size = np.prod(bias_shape)
-
-            self.weights[i] = flat_weights[start:start + weight_size].reshape(weight_shape)
-            start += weight_size
-
-            self.biases[i] = flat_weights[start:start + bias_size].reshape(bias_shape)
-            start += bias_size
-
-    def _get_weights(self):
-        flat_weights = []
-        for w, b in zip(self.weights, self.biases):
-            flat_weights.extend(w.flatten())
-            flat_weights.extend(b.flatten())
-        return np.array(flat_weights)
-
+        self.biases = [np.zeros((1, layer_sizes[i+1])) for i in range(self.layers_num - 1)]
+        # self.biases = [np.random.randn(1, layer_sizes[i+1]) for i in range(self.layers_num - 1)]
+                
     def relu(self, x):
         return np.maximum(0, x)
 
@@ -87,10 +66,12 @@ class MLP():
         return y_pred - y_true
 
     def train_gradient(self, x, y, epochs=1000, learning_rate=0.01):
-        for _ in range(epochs):
+        for epoch in range(epochs):
             y_pred = self.forward(x)
             self.backward(y, learning_rate)
-
+            if epoch % 10 == 0:  # Loguj co 100 epok
+                print(f"Epoch {epoch}, Loss: {mse(y, y_pred)}")
+    
     def forward(self, X):
         """Propagacja wprzód"""
         self.a = [X]  # Lista aktywacji (dla każdej warstwy)
@@ -99,55 +80,18 @@ class MLP():
             self.a.append(self.activation_fun(z))  # Zastosowanie funkcji aktywacji
         return self.a[-1]  # Zwrócenie wyniku końcowego (wynik ostatniej warstwy)
 
-    def backward(self, X, Y, learning_rate=0.01):
-        """Propagacja wsteczna (backpropagation)"""
-        # Obliczanie błędu na wyjściu (gradient MSE)
-        deltas = [mse_derivative(Y, self.a[-1]) * self.activation_derivative(self.a[-1])]
+    def backward(self, Y, learning_rate=0.01):
+        """Backward propagation (backpropagation)"""
+        # Compute the error at the output layer
+        output_error = self.a[-1] - Y
+        deltas = [output_error * self.activation_derivative(self.a[-1])]
 
-        # Obliczanie deltas dla warstw ukrytych
+        # Backpropagate the error through the hidden layers
         for i in range(self.layers_num - 2, 0, -1):
             delta = np.dot(deltas[0], self.weights[i].T) * self.activation_derivative(self.a[i])
-            deltas.insert(0, delta)
+            deltas.insert(0, delta)  # Insert at the beginning to reverse the order
 
-        # Aktualizacja wag i biasów
+        # Update weights and biases
         for i in range(len(self.weights)):
-            self.weights[i] -= learning_rate * np.dot(self.a[i].T, deltas[i])  # Waga dla całego zbioru danych
-            self.biases[i] -= learning_rate * np.sum(deltas[i], axis=0, keepdims=True)  # Bias dla całego zbioru danych
-
-    def compute_loss(self, X, y):
-        y_pred = self.forward(X)
-        return np.mean((y_pred - y) ** 2)
-
-    def train_es(self, X: Sequence[float], y: Sequence[float], iterations:int=100, sigma:float=0.1):
-        weights = self._get_weights()
-        dim = len(weights)
-        success_count = 0
-        success_threshold = 1 / 5
-
-        for i in range(iterations):
-            mutation = np.random.randn(dim) * sigma
-            new_weights = weights + mutation
-
-            self._set_weights(weights)
-            loss = self.compute_loss(X, y)
-            self._set_weights(new_weights)
-            new_loss = self.compute_loss(X, y)
-
-            if new_loss < loss:
-                weights = new_weights
-                success_count += 1
-            else:
-                self._set_weights(weights)
-
-            if (i + 1) % 10 == 0:
-                success_rate = success_count / 10
-                if success_rate > success_threshold:
-                    sigma *= 1.1
-                else:
-                    sigma *= 0.9
-                success_count = 0
-
-            if (i + 1) % 10 == 0:
-                print(f"Iteracja {i+1}: Loss = {loss:.4f}, Sigma = {sigma:.4f}")
-
-        self._set_weights(weights)
+            self.weights[i] -= learning_rate * np.dot(self.a[i].T, deltas[i])
+            self.biases[i] -= learning_rate * np.sum(deltas[i], axis=0, keepdims=True)

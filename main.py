@@ -6,21 +6,27 @@ matplotlib.use('Agg')
 from multilayer_perceptron import *
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
+from dataclasses import dataclass
+import copy
 
 
-class Sigmoid(ActivationFunc):
-    def __call__(self, X):
-        return 1 / (1 + np.exp(-X))
+@dataclass
+class TestParams:
+    domain: tuple
+    dim: int
+    samples_density: int
+    test_size: int
+    activation_fun: ActivationFun
+    epochs: int
+    learning_rate: float
 
-    def derivative(self, X):
-        return sigmoid(X) * (1 - sigmoid(X))
-
+def mse(y_true, y_pred):
+        return np.mean((y_true - y_pred) ** 2)
 
 def investigated_function(x_vec):
     x = x_vec[:, 0]
     result = x**2 * np.sin(x) + 100 * np.sin(x) * np.cos(x)
     return result.reshape(-1, 1)
-
 
 def three_dim_fun(x_vec):
     x = x_vec[:, 0]
@@ -32,26 +38,58 @@ def three_dim_fun(x_vec):
 
     return result
 
+def test_MLP(layer_sizes_list, params):
+    gen = DataGenerator()
+    x_train, y_train = gen.get_train_data(params.domain, params.dim, investigated_function, params.samples_density)
+    x_test, y_test = gen.get_test_data(params.domain, params.dim, investigated_function, params.test_size)
+
+    x_scaler = MinMaxScaler(feature_range=(0, 1))
+    y_scaler = MinMaxScaler(feature_range=(0, 1))
+    x_scaler.fit(x_train)
+    y_scaler.fit(y_train)
+
+    norm_x_train = x_scaler.transform(x_train)
+    norm_x_test = x_scaler.transform(x_test)
+    norm_y_train = y_scaler.transform(y_train)
+    norm_y_test = y_scaler.transform(y_test)
+
+    for layer_sizes in layer_sizes_list:
+        mlp = MLP(layer_sizes, params.activation_fun)
+        mlp.train_gradient(norm_x_train, norm_y_train, params.epochs, params.learning_rate)
+
+        y_pred = mlp.forward(norm_x_test)
+        denorm_y_pred = y_scaler.inverse_transform(y_pred)
+        
+        accuracy = mse(y_test, denorm_y_pred)
+        print(f"Layer sizes: {layer_sizes}, MSE: {accuracy}")
 
 if __name__ == "__main__":
-    DOMAIN = (-10, 10)
-    DIM = 1
-    SAMPLES_DENSITY = 100
 
-    sigmoid = Sigmoid()
+    test_params = TestParams(
+        domain=(-10, 10),
+        dim=1,
+        samples_density=100,
+        test_size=100,
+        activation_fun=ActivationFun.SIGMOID,
+        epochs=1000,  # Increase the number of epochs
+        learning_rate=0.2  # Lower the learning rate
+    )
 
-    gen = DataGenerator()
-    x, y = gen.get_data(DOMAIN, DIM, investigated_function, SAMPLES_DENSITY)
+    layer_sizes_list = [
+        [1, 10, 10, 1],
+    ]
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    norm_y = scaler.fit_transform(y)
-    # denorm_y = scaler.inverse_transform(norm_y)
+    # test_MLP(layer_sizes_list, test_params)
 
-    mlp = MLP([1, 10, 10, 1], sigmoid)  # Sieć z dwoma ukrytymi warstwami
-    mlp.train_es(x, norm_y)
+    x_train = np.random.rand(100, 1)
+    y_train = 2 * x_train + 1  # Funkcja liniowa: y = 2x + 1
+    mlp = MLP(layer_sizes=[1, 10, 1], activation_fun=ActivationFun.RELU)
+    mlp.train_gradient(x_train, y_train, epochs=1000, learning_rate=0.01)
 
-    y_pred = mlp.forward(x)
-    denorm_y_pred = scaler.inverse_transform(y_pred)
-    print(denorm_y_pred)
-    print("Final Loss:", mse(y, denorm_y_pred))
+    print(mlp.forward([1]))
+    print(mlp.weights)
+
+
+
+
 
