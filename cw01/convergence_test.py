@@ -1,13 +1,17 @@
 from functions import quadratic_fun, my_f3 as f3, my_f12 as f12
-from gradient_descent import solver
+from gradient_descent import solver, SolverConfig
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from random import random
+import matplotlib
+
+matplotlib.use("Agg")
 
 
 def different_start_point_test(f, start_points, alpha, eps, max_it=1e3, logy=False):
     for i, point in enumerate(start_points, start=1):
-        result = solver(f, point, alpha, eps, max_it=max_it)
+        config = SolverConfig(f=f, x0=point, alpha=alpha, eps=eps, max_it=max_it)
+        result = solver(config)
         q = result[1]
         steps_num = len(q)
         t = range(steps_num)
@@ -18,7 +22,7 @@ def different_start_point_test(f, start_points, alpha, eps, max_it=1e3, logy=Fal
             plt.plot(t, q, label=label)
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     plt.xlabel("Numer iteracji (k)", fontsize=18, fontweight="bold")
-    plt.ylabel("Wartość funkcj f(k)", fontsize=18, fontweight="bold")
+    plt.ylabel("Wartość funkcji f(k)", fontsize=18, fontweight="bold")
     plt.title(
         "Przebieg zmian wartości\n funkcji kwadratowej, α=1e-1",
         fontsize=18,
