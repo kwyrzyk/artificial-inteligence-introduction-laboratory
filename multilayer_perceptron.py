@@ -11,6 +11,14 @@ class ActivationFunc(Protocol):
         pass
 
 
+class LossFunc(Protocol):
+    def __call__(self, y_true: Sequence[float], y_pred: Sequence[float]) -> Sequence[float]:
+        pass
+
+    def derivative(self, y_true: Sequence[float], y_pred: Sequence[float]) -> Sequence[float]:
+        pass
+
+
 def relu(x):
     return np.maximum(0, x)
 
@@ -31,11 +39,11 @@ def mse_derivative(y_true, y_pred):
 
 
 class MLP():
-    def __init__(self, layer_sizes, activation_fun: ActivationFunc):
+    def __init__(self, layer_sizes, activation_fun: ActivationFunc, loss: LossFunc):
         self.layer_size = layer_sizes
         self.layers_num = len(layer_sizes)
         self.activation_fun = activation_fun
-        self.activation_derivative = activation_fun.derivative
+        self.loss = loss
 
         self.weights = [np.random.randn(layer_sizes[i], layer_sizes[i+1]) for i in range(self.layers_num - 1)]
         self.biases = [np.random.randn(1, layer_sizes[i+1]) for i in range(self.layers_num - 1)]
@@ -103,7 +111,7 @@ class MLP():
                 self.backward(y_batch, learning_rate)
             epoch_loss /= (num_samples / batch_size)
             if (epoch + 1) % 100 == 0:
-                print(f"Epoka {epoch + 1}/{epochs} Loss: {epoch_loss}")
+                print(f"Epoch {epoch + 1}/{epochs} Loss: {epoch_loss}")
 
     def forward(self, X):
         """Propagacja wprzód"""
@@ -116,11 +124,11 @@ class MLP():
     def backward(self, y, learning_rate, lambda_reg=0.01):
         """Propagacja wsteczna (backpropagation)"""
         # Obliczanie błędu na wyjściu (gradient MSE)
-        deltas = [mse_derivative(y, self.a[-1]) * self.activation_derivative(self.a[-1])]
+        deltas = [self.loss.derivative(y, self.a[-1]) * self.activation_fun.derivative(self.a[-1])]
 
         # Obliczanie deltas dla warstw ukrytych
         for i in range(self.layers_num - 2, 0, -1):
-            delta = np.dot(deltas[0], self.weights[i].T) * self.activation_derivative(self.a[i])
+            delta = np.dot(deltas[0], self.weights[i].T) * self.activation_fun.derivative(self.a[i])
             deltas.insert(0, delta)
 
         # Aktualizacja wag i biasów
@@ -130,7 +138,7 @@ class MLP():
 
     def compute_loss(self, X, y):
         y_pred = self.forward(X)
-        return np.mean((y_pred - y) ** 2)
+        return self.loss(y, y_pred)
 
     def train_es(self, X: Sequence[float], y: Sequence[float], iterations:int=100, sigma:float=0.1):
         weights = self._get_weights()

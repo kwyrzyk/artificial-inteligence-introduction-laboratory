@@ -26,6 +26,14 @@ class ReLU(ActivationFunc):
         return (x > 0).astype(float)
 
 
+class MAE(LossFunc):
+    def __call__(self, y_true, y_pred):
+        return np.mean(np.abs(y_true - y_pred))
+
+    def derivative(self, y_true, y_pred):
+        return np.sign(y_pred - y_true) / len(y_true)
+
+
 def investigated_function(x_vec):
     x = x_vec[:, 0]
     result = x**2 * np.sin(x) + 100 * np.sin(x) * np.cos(x)
@@ -44,7 +52,6 @@ def three_dim_fun(x_vec):
 
 
 if __name__ == "__main__":
-    # Ustawienia
     DOMAIN = (-10, 10)
     DIM = 1
     SAMPLES_DENSITY = 100
@@ -52,6 +59,7 @@ if __name__ == "__main__":
     RANDOM_STATE = 42
     HIDDEN_LAYERS = [10, 10]
     ACTIVATION = ReLU()
+    LOSS = MAE()
     EPOCHS = 1000
     LEARNING_RATE = 0.01
     BATCH_SIZE = 32
@@ -69,23 +77,23 @@ if __name__ == "__main__":
     y_train = scaler_y.fit_transform(y_train)
     y_test = scaler_y.transform(y_test)
 
-    mlp = MLP([DIM] + HIDDEN_LAYERS + [1], ACTIVATION)
+    mlp = MLP([DIM] + HIDDEN_LAYERS + [1], ACTIVATION, LOSS)
     mlp.train_gradient(x_train, y_train, epochs=EPOCHS, learning_rate=LEARNING_RATE, batch_size=BATCH_SIZE)
 
     y_pred_train = mlp.forward(x_train)
     y_pred_test = mlp.forward(x_test)
-
-    # y_pred_train = scaler_y.inverse_transform(y_pred_train)
-    # y_pred_test = scaler_y.inverse_transform(y_pred_test)
-
-    # y_train = scaler_y.inverse_transform(y_train)
-    # y_test = scaler_y.inverse_transform(y_test)
 
     train_loss = mse(y_train, y_pred_train)
     test_loss = mse(y_test, y_pred_test)
 
     print(f"Train Loss: {train_loss:.4f}")
     print(f"Test Loss: {test_loss:.4f}")
+
+    y_pred_train = scaler_y.inverse_transform(y_pred_train)
+    y_pred_test = scaler_y.inverse_transform(y_pred_test)
+
+    y_train = scaler_y.inverse_transform(y_train)
+    y_test = scaler_y.inverse_transform(y_test)
 
     plt.scatter(x_test, y_test, label="Prawdziwe", color="blue")
     plt.scatter(x_test, y_pred_test, label="Przewidywane", color="red", alpha=0.6)
