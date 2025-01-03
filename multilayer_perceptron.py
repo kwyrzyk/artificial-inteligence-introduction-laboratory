@@ -86,10 +86,24 @@ class MLP():
     def mse_derivative(y_true, y_pred):
         return y_pred - y_true
 
-    def train_gradient(self, x, y, epochs=1000, learning_rate=0.01):
-        for _ in range(epochs):
-            y_pred = self.forward(x)
-            self.backward(y, learning_rate)
+    def train_gradient(self, x, y, epochs=1000, learning_rate=0.01, batch_size=32):
+        num_samples = len(x)
+        for epoch in range(epochs):
+            indices = np.random.permutation(num_samples)
+            x_shuffled = x[indices]
+            y_shuffled = y[indices]
+            epoch_loss = 0
+            for i in range(0, num_samples, batch_size):
+                x_batch = x_shuffled[i:i + batch_size]
+                y_batch = y_shuffled[i:i + batch_size]
+
+                y_pred_batch = self.forward(x_batch)
+                batch_loss = self.compute_loss(x_batch, y_batch)
+                epoch_loss += batch_loss
+                self.backward(y_batch, learning_rate)
+            epoch_loss /= (num_samples / batch_size)
+            if (epoch + 1) % 100 == 0:
+                print(f"Epoka {epoch + 1}/{epochs} Loss: {epoch_loss}")
 
     def forward(self, X):
         """Propagacja wprzód"""
@@ -99,10 +113,10 @@ class MLP():
             self.a.append(self.activation_fun(z))  # Zastosowanie funkcji aktywacji
         return self.a[-1]  # Zwrócenie wyniku końcowego (wynik ostatniej warstwy)
 
-    def backward(self, X, Y, learning_rate=0.01):
+    def backward(self, y, learning_rate, lambda_reg=0.01):
         """Propagacja wsteczna (backpropagation)"""
         # Obliczanie błędu na wyjściu (gradient MSE)
-        deltas = [mse_derivative(Y, self.a[-1]) * self.activation_derivative(self.a[-1])]
+        deltas = [mse_derivative(y, self.a[-1]) * self.activation_derivative(self.a[-1])]
 
         # Obliczanie deltas dla warstw ukrytych
         for i in range(self.layers_num - 2, 0, -1):
@@ -111,7 +125,7 @@ class MLP():
 
         # Aktualizacja wag i biasów
         for i in range(len(self.weights)):
-            self.weights[i] -= learning_rate * np.dot(self.a[i].T, deltas[i])  # Waga dla całego zbioru danych
+            self.weights[i] -= learning_rate * (np.dot(self.a[i].T, deltas[i]) + lambda_reg * self.weights[i])  # Waga dla całego zbioru danych
             self.biases[i] -= learning_rate * np.sum(deltas[i], axis=0, keepdims=True)  # Bias dla całego zbioru danych
 
     def compute_loss(self, X, y):
