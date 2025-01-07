@@ -82,12 +82,24 @@ class MLP:
             self.weights[i] -= learning_rate * np.dot(self.a[i].T, deltas[i])
             self.biases[i] -= learning_rate * np.sum(deltas[i], axis=0, keepdims=True)
 
-    def train_gradient(self, X: np.ndarray, Y: np.ndarray, epochs: int = 1000, learning_rate: float = 0.01):
+    def train_gradient(self, X: np.ndarray, Y: np.ndarray, epochs: int = 1000, learning_rate: float = 0.01, batch_size: int = 32):
+        num_samples = len(X)
         for epoch in range(epochs):
-            y_pred = self.forward(X)
-            self.backward(Y, learning_rate)
+            indices = np.random.permutation(num_samples)
+            x_shuffled = X[indices]
+            y_shuffled = Y[indices]
+            epoch_loss = 0
+            for i in range(0, num_samples, batch_size):
+                x_batch = x_shuffled[i:i + batch_size]
+                y_batch = y_shuffled[i:i + batch_size]
+
+                y_pred_batch = self.forward(x_batch)
+                batch_loss = mse(y_batch, y_pred_batch)
+                epoch_loss += batch_loss
+                self.backward(y_batch, learning_rate)
+            epoch_loss /= (num_samples / batch_size)
             if epoch % 10 == 0:  # Loguj co 10 epok
-                print(f"Epoch {epoch}, Loss: {mse(Y, y_pred)}")
+                print(f"Epoch {epoch}, Loss: {epoch_loss}")
 
     def _set_weights(self, flat_weights):
         start = 0
