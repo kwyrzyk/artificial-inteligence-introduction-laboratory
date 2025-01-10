@@ -5,10 +5,19 @@ from typing import Protocol, Sequence
 # Definicja protokołu dla funkcji aktywacji
 class ActivationFunc(Protocol):
     def __call__(self, x: np.ndarray) -> np.ndarray:
-        pass
+        ...
 
     def derivative(self, x: np.ndarray) -> np.ndarray:
-        pass
+        ...
+
+
+
+class LossFunc(Protocol):
+    def __call__(self, y_true: np.ndarray, y_pred: np.ndarray):
+        ...
+
+    def derivative(self, y_true: np.ndarray, y_pred: np.ndarray):
+        ...
 
 
 # Implementacje funkcji aktywacji
@@ -37,22 +46,23 @@ class Tanh:
         return 1 - np.tanh(x) ** 2
 
 
-# Funkcja kosztu (MSE) i jej pochodna
-def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    return np.mean((y_true - y_pred) ** 2)
+class MSE(LossFunc):
+    def __call__(self, y_true, y_pred):
+        return np.mean((y_true - y_pred) ** 2)
 
-
-def mse_derivative(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-    return y_pred - y_true
+    def derivative(self, y_true, y_pred):
+        return y_pred - y_true
 
 
 # Klasa wielowarstwowego perceptronu
 class MLP:
-    def __init__(self, layer_sizes: Sequence[int], activation_fun: ActivationFunc):
+    def __init__(self, layer_sizes: Sequence[int], activation_fun: ActivationFunc, loss_func: LossFunc):
         self.layer_sizes = layer_sizes
         self.layers_num = len(layer_sizes)
         self.activation_fun = activation_fun
         self.activation_derivative = activation_fun.derivative
+        self.loss_fun = loss_func
+        self.loss_derivative = loss_func.derivative
 
         # Inicjalizacja wag i biasów
         self.weights = [np.random.randn(layer_sizes[i], layer_sizes[i + 1]) for i in range(self.layers_num - 1)]
@@ -69,8 +79,7 @@ class MLP:
     def backward(self, Y: np.ndarray, learning_rate: float = 0.01):
         """Propagacja wsteczna (backpropagation)"""
         # Obliczanie błędu w warstwie wyjściowej
-        output_error = self.a[-1] - Y
-        deltas = [output_error * self.activation_derivative(self.a[-1])]
+        deltas = [self.loss_derivative(Y, self.a[-1]) * self.activation_derivative(self.a[-1])]
 
         # Propagacja błędu przez warstwy ukryte
         for i in range(self.layers_num - 2, 0, -1):
@@ -94,7 +103,7 @@ class MLP:
                 y_batch = y_shuffled[i:i + batch_size]
 
                 y_pred_batch = self.forward(x_batch)
-                batch_loss = mse(y_batch, y_pred_batch)
+                batch_loss = self.loss_fun(y_batch, y_pred_batch)
                 epoch_loss += batch_loss
                 self.backward(y_batch, learning_rate)
             epoch_loss /= (num_samples / batch_size)
@@ -135,11 +144,11 @@ class MLP:
 
             self._set_weights(weights)
             predictions = self.forward(X)
-            loss = mse(y, predictions)
+            loss = self.loss_fun(y, predictions)
 
             self._set_weights(new_weights)
             predictions = self.forward(X)
-            new_loss = mse(y, predictions)
+            new_loss = self.loss_fun(y, predictions)
 
             if new_loss < loss:
                 weights = new_weights
