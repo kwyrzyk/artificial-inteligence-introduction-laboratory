@@ -13,7 +13,7 @@ class DataGenerator:
         X = np.array(list(product(x, repeat=dim)))
         Y = fun(X)
         return X, Y
-    
+
     def get_test_data(self, domain, dim, fun, samples_num):
         domain_min = domain[0]
         domain_max = domain[1]
