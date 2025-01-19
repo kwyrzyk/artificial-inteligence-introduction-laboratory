@@ -19,6 +19,9 @@ class EpsilonGreedyStrategy(SelectStrategy):
             return random.randint(0, actions_num - 1)
         else:
             return np.argmax(q_table[state])
+    
+    def __str__(self):
+        return 'Epsilon Greedy Strategy'
 
 class BoltzmannStrategy(SelectStrategy):
     def __init__(self, temperature):
@@ -31,6 +34,9 @@ class BoltzmannStrategy(SelectStrategy):
         action = np.random.choice(actions_num, p=probabilities)
         return action
     
+    def __str__(self):
+        return 'Bolztzmann Strategy'
+    
 class CountBasedStrategy(SelectStrategy):
     def __init__(self, actions_num, states_num):
         self.visit_count = np.zeros(states_num, actions_num)
@@ -41,6 +47,9 @@ class CountBasedStrategy(SelectStrategy):
         action = np.argmax(adjusted_q_values)
         self.visit_count[state, action] += 1
         return action
+
+    def __str__(self):
+        return 'Count Based Strategy'
     
 @dataclass
 class AgentParams:

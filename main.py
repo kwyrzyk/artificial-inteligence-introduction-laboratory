@@ -36,10 +36,11 @@ def test_learning_rates(episodes, trials, learning_rates, strategy):
 
     plt.xlabel("Episode")
     plt.ylabel("Average Total Reward")
-    plt.title("Comparison of Learning Rates")
+    plt.title("Comparison of Learning Rates - " + str(strategy))
     plt.legend()
     plt.grid()
-    plt.savefig('learning_rate.png')
+    plt.savefig(str(strategy).replace(" ", "_").lower() + '_learning_rate.png')
+    # plt.savefig('learning_rate.png')
 
 class GymEnvironment(Environment):
     def __init__(self, env_name):
@@ -55,12 +56,13 @@ class GymEnvironment(Environment):
         next_state, reward, done,_ ,_ = self.env.step(action)
         return int(next_state), int(reward), int(done)
 
+if __name__ == "__main__":
+    # env = GymEnvironment('Taxi-v3')
+    # agent_params = AgentParams(env, 0.1, 0.99)
+    # EPISODES = 1000
 
-# env = GymEnvironment('Taxi-v3')
-# agent_params = AgentParams(env, 0.1, 0.99)
-# EPISODES = 1000
+    # agent = QLearningAgent(agent_params)
+    # result = agent.train(EPISODES, EpsilonGreedyStrategy(0.1))
 
-# agent = QLearningAgent(agent_params)
-# result = agent.train(EPISODES, EpsilonGreedyStrategy(0.1))
-
-test_learning_rates(1000, 3, [0.01, 0.1, 0.2], EpsilonGreedyStrategy(0.1))
+    # test_learning_rates(1000, 3, [0.01, 0.1, 0.2], EpsilonGreedyStrategy(0.1))
+    test_learning_rates(1000, 1, [0.01], EpsilonGreedyStrategy(0.1))
