@@ -3,7 +3,6 @@ import gym
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-# from matplotlib.ticker import MaxNLocator
 import matplotlib
 
 matplotlib.use("Agg")
