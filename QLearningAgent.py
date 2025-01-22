@@ -39,7 +39,7 @@ class BoltzmannStrategy(SelectStrategy):
     
 class CountBasedStrategy(SelectStrategy):
     def __init__(self, actions_num, states_num):
-        self.visit_count = np.zeros(states_num, actions_num)
+        self.visit_count = np.zeros((states_num, actions_num))
 
     def select(self, q_table, state, actions_num):
         exploration_bonus = 1 / (np.sqrt(self.visit_count[state] + 1))
@@ -72,7 +72,7 @@ class QLearningAgent:
         action = int(action)
         next_state = int(next_state)
         
-        max_q_next = np.max(self.q_table[next_state]) if not done else 0  # Jeśli epizod się skończy, max Q = 0
+        max_q_next = np.max(self.q_table[next_state]) if not done else 0
         self.q_table[state, action] = self.q_table[state, action] + \
                                       self.learning_rate * (reward + self.discount_factor * max_q_next - self.q_table[state, action])
         
