@@ -75,14 +75,14 @@ class QLearningAgent:
         rewards = []
 
         for episode in range(episodes):
-            state = self.env.reset()  # Reset środowiska
+            state = self.env.reset()
             total_reward = 0
             done = False
 
             while not done:
-                action = strategy.select(self.q_table, state, self.actions_num)  # Wybór akcji
-                next_state, reward, done = self.env.step(action)  # Wykonanie akcji
-                self.update_q(state, action, reward, next_state, done)  # Aktualizacja Q
+                action = strategy.select(self.q_table, state, self.actions_num)
+                next_state, reward, done = self.env.step(action)
+                self.update_q(state, action, reward, next_state, done)
                 state = next_state
                 total_reward += reward
 
