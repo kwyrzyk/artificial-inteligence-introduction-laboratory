@@ -33,7 +33,7 @@ def evaluate_classifiers(classifiers, classifier_names, X, y, n_splits=5):
     plt.title('Accuracy in each fold by classifier', fontweight="bold")
     min_acc = min(min(acc) for acc in accuracies.values())
     max_acc = max(max(acc) for acc in accuracies.values())
-    plt.ylim(min_acc * 0.95, 1.05)
+    plt.ylim(min_acc * 0.95, max_acc*1.05)
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend()
     plt.savefig("accuracy_in_each_fold.png")
